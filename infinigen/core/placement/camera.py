@@ -717,7 +717,7 @@ def configure_cameras(
     for cam_rig in cam_rigs:
         views = compute_base_views(
             cam_rig,
-            n_views=1,
+            n_views=5,
             location_sample=location_sample,
             center_coordinate=center_coordinate,
             radius=mvs_radius,
