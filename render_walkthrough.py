@@ -9,12 +9,11 @@ import numpy as np
 from infinigen.core.placement.animation_policy import animate_trajectory
 from infinigen.core.placement.camera import camera_selection_preprocessing
 from infinigen.core.util.rrt import (
-    AnimPolicyRRT,
     RRT,
+    AnimPolicyRRT,
     validate_cam_pose_rrt,
     validate_node_indoors,
 )
-
 
 SETTINGS = {
     "quick": {
@@ -61,9 +60,13 @@ SETTINGS = {
 def parse_mode():
     argv = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
     parser = argparse.ArgumentParser(add_help=True)
-    parser.add_argument("--quick", action="store_true", help="Use quick/test render settings")
+    parser.add_argument(
+        "--quick", action="store_true", help="Use quick/test render settings"
+    )
     parser.add_argument("--test", action="store_true", help="Alias for --quick")
-    parser.add_argument("--full", action="store_true", help="Use full-quality render settings")
+    parser.add_argument(
+        "--full", action="store_true", help="Use full-quality render settings"
+    )
     args = parser.parse_args(argv)
 
     if args.quick or args.test:
@@ -81,7 +84,9 @@ def estimate_volume(obj):
 def split_room_and_nonroom(mesh_objs):
     room_name_tokens = ("room", "wall", "floor", "ceiling", "ceil")
     room_objs = [
-        obj for obj in mesh_objs if any(token in obj.name.lower() for token in room_name_tokens)
+        obj
+        for obj in mesh_objs
+        if any(token in obj.name.lower() for token in room_name_tokens)
     ]
     if len(room_objs) < 2:
         by_size = sorted(mesh_objs, key=estimate_volume, reverse=True)
@@ -128,7 +133,9 @@ def fallback_pan(scene, rig, cfg):
 
 
 def animate_rrt(scene, rig, cfg):
-    mesh_objs = [obj for obj in bpy.data.objects if obj.type == "MESH" and not obj.hide_render]
+    mesh_objs = [
+        obj for obj in bpy.data.objects if obj.type == "MESH" and not obj.hide_render
+    ]
     if len(mesh_objs) < 2:
         raise ValueError("Not enough renderable mesh objects for RRT")
     room_objs, nonroom_objs = split_room_and_nonroom(mesh_objs)
@@ -140,7 +147,9 @@ def animate_rrt(scene, rig, cfg):
     rig.location = (rig.location.x, rig.location.y, 1.65)
     rig.rotation_euler = (np.deg2rad(90), 0.0, rig.rotation_euler.z)
 
-    scene_preprocessed = camera_selection_preprocessing(terrain=None, scene_objs=mesh_objs)
+    scene_preprocessed = camera_selection_preprocessing(
+        terrain=None, scene_objs=mesh_objs
+    )
     policy = AnimPolicyRRT(
         rrt=RRT(
             obj_groups=[room_objs, nonroom_objs],
@@ -205,19 +214,27 @@ def main():
     print(f"Resolution: {scene.render.resolution_x}x{scene.render.resolution_y}")
     print(f"Samples: {scene.cycles.samples}")
     print(f"Frames: {scene.frame_start} to {scene.frame_end} ({total_frames} frames)")
-    print(f"Duration: {total_frames / scene.render.fps:.1f} seconds at {scene.render.fps} fps")
-    print(f"Estimated time: ~{total_frames * cfg['estimate_seconds_per_frame']:.0f} seconds")
+    print(
+        f"Duration: {total_frames / scene.render.fps:.1f} seconds at {scene.render.fps} fps"
+    )
+    print(
+        f"Estimated time: ~{total_frames * cfg['estimate_seconds_per_frame']:.0f} seconds"
+    )
 
     try:
         room_count, nonroom_count = animate_rrt(scene, rig, cfg)
-        print(f"Camera trajectory mode: RRT (room objs: {room_count}, non-room objs: {nonroom_count})")
+        print(
+            f"Camera trajectory mode: RRT (room objs: {room_count}, non-room objs: {nonroom_count})"
+        )
     except Exception as err:
         print(f"RRT animation failed: {err}")
         print("Falling back to stationary pan animation.")
         fallback_pan(scene, rig, cfg)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_dir = f"/Users/sebastian/repos/infinigen/outputs/{cfg['output_prefix']}_{timestamp}"
+    output_dir = (
+        f"/Users/sebastian/repos/infinigen/outputs/{cfg['output_prefix']}_{timestamp}"
+    )
     os.makedirs(output_dir, exist_ok=True)
 
     print("\n=== Rendering All Frames ===")
@@ -228,9 +245,13 @@ def main():
     print("\n=== Rendering Complete ===")
     print(f"Frames saved to: {output_dir}")
     ffmpeg_cmd = (
-        f"ffmpeg -framerate 24 -i {output_dir}/frame_%04d.png "
-        f"-c:v libx264 -pix_fmt yuv420p {cfg['ffmpeg_crf_arg']} {output_dir}/walkthrough.mp4"
-    ).replace("  ", " ").strip()
+        (
+            f"ffmpeg -framerate 24 -i {output_dir}/frame_%04d.png "
+            f"-c:v libx264 -pix_fmt yuv420p {cfg['ffmpeg_crf_arg']} {output_dir}/walkthrough.mp4"
+        )
+        .replace("  ", " ")
+        .strip()
+    )
     print("\nTo create video, run:")
     print(ffmpeg_cmd)
 
