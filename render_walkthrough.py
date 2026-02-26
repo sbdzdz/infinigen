@@ -63,13 +63,12 @@ def parse_mode():
     parser.add_argument(
         "--quick", action="store_true", help="Use quick/test render settings"
     )
-    parser.add_argument("--test", action="store_true", help="Alias for --quick")
     parser.add_argument(
         "--full", action="store_true", help="Use full-quality render settings"
     )
     args = parser.parse_args(argv)
 
-    if args.quick or args.test:
+    if args.quick:
         return "quick"
     if args.full:
         return "full"
